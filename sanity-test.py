@@ -27,7 +27,7 @@ class RunPython:
         counter-intuitive."""
         try:
             assert os.access(str(path), os.X_OK)
-            subprocess.run(['./' + path.name], check=True, cwd=path.parent, timeout=timeout)
+            subprocess.run(['./' + path.name], check=True, cwd=str(path.parent), timeout=timeout)
         except subprocess.TimeoutExpired:
             return True
         except subprocess.CalledProcessError:
