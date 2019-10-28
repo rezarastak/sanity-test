@@ -26,7 +26,7 @@ class RunPython:
         simulation). Thus reaching timeout causes the test to succeeds. This is a little
         counter-intuitive."""
         try:
-            assert os.access(path, os.X_OK)
+            assert os.access(str(path), os.X_OK)
             subprocess.run(['./' + path.name], check=True, cwd=path.parent, timeout=timeout)
         except subprocess.TimeoutExpired:
             return True
