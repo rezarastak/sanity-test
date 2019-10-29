@@ -63,5 +63,6 @@ class RunPython:
 def find_and_test_all(path: Path, file_template, timeout: Optional[float] = None) -> None:
     """Given a file template (a class similar to RunPython) find all instances of those files"""
     for myfile in path.glob(file_template.glob):
-        print('Testing the file {}'.format(myfile))
+        print('Testing the file {}.'.format(myfile))
         assert file_template.test(myfile, timeout)
+        print('File {} succeeded.'.format(myfile))
