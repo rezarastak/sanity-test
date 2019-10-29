@@ -27,7 +27,7 @@ class RunPython:
         counter-intuitive."""
         try:
             assert os.access(str(path), os.X_OK), '{} is not executable'.format(path)
-            subprocess.run(['./' + path.name], check=True, cwd=str(path.parent), timeout=timeout)
+            subprocess.run(['./' + str(path)], check=True, cwd=str(path.parent), timeout=timeout)
         except subprocess.TimeoutExpired:
             return True
         except subprocess.CalledProcessError:
