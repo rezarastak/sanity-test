@@ -7,7 +7,6 @@ can be run and reproduced.
 
 from pathlib import Path
 import subprocess
-import os
 from typing import Optional
 
 
@@ -30,15 +29,29 @@ class RunPython:
     glob = '**/run.py'
 
     @staticmethod
+    def _choose_interpreter(path: Path) -> str:
+        """Given a python file, determines which python interpreter to use"""
+        suggested_interpreter = find_shebang_executable(path)
+        if suggested_interpreter is not None:
+            assert 'python' in suggested_interpreter, \
+                'Invalid python interpreter: ' + suggested_interpreter
+            return suggested_interpreter
+        else:
+            # For now it assumes all scripts with no shebang are python3 scripts
+            # TODO: remove this assumption about python3
+            return 'python3'
+
+    @staticmethod
     def test(path: Path, timeout: Optional[float] = None) -> bool:
         """Tests a file. If successful, it returns true.
         A timeout can be provided to limit the execution time. However, we assume that
         whenever the process times out, it is working correctly (although it is a slow
         simulation). Thus reaching timeout causes the test to succeeds. This is a little
         counter-intuitive."""
+        interpreter = RunPython._choose_interpreter(path)
         try:
-            assert os.access(str(path), os.X_OK), '{} is not executable'.format(path)
-            subprocess.run(['./' + path.name], check=True, cwd=str(path.parent), timeout=timeout)
+            subprocess.run([interpreter, path.name], check=True, cwd=str(path.parent),
+                           timeout=timeout)
         except subprocess.TimeoutExpired:
             return True
         except subprocess.CalledProcessError:
