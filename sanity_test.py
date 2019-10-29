@@ -11,6 +11,17 @@ import os
 from typing import Optional
 
 
+def find_shebang_executable(path: Path) -> Optional[str]:
+    """Reads the first line of a file and if it has a #!, it finds the corresponding
+    executable to run the program"""
+    with open(str(path), 'r') as f:
+        first_line = f.readline()
+    if first_line.startswith('#!'):
+        return first_line[2:].strip().split(' ')[-1]
+    else:
+        return None
+
+
 class RunPython:
     """This class looks for files named run.py and runs them. It can also perform
     some static analysis on the files.
@@ -27,7 +38,7 @@ class RunPython:
         counter-intuitive."""
         try:
             assert os.access(str(path), os.X_OK), '{} is not executable'.format(path)
-            subprocess.run(['./' + str(path)], check=True, cwd=str(path.parent), timeout=timeout)
+            subprocess.run(['./' + path.name], check=True, cwd=str(path.parent), timeout=timeout)
         except subprocess.TimeoutExpired:
             return True
         except subprocess.CalledProcessError:

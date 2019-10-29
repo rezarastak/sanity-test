@@ -4,7 +4,8 @@ python:
     - "3.8"
     - "nightly"
 install:
-    - pip install flake8 mypy
+    - pip install flake8 mypy pytest pytest-cov
 script:
-    - flake8
     - mypy .
+    - python -m pytest --cov=.
+    - flake8
