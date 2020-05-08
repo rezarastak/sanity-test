@@ -7,7 +7,8 @@ can be run and reproduced.
 
 from pathlib import Path
 import subprocess
-from typing import Optional
+import sys
+from typing import Optional, Sequence
 
 
 def find_shebang_executable(path: Path) -> Optional[str]:
@@ -29,7 +30,7 @@ class RunPython:
     glob = '**/run.py'
 
     @staticmethod
-    def _choose_interpreter(path: Path) -> str:
+    def _choose_interpreter(path: Path)-> str:
         """Given a python file, determines which python interpreter to use"""
         suggested_interpreter = find_shebang_executable(path)
         if suggested_interpreter is not None:
@@ -60,9 +61,39 @@ class RunPython:
             return True
 
 
-def find_and_test_all(path: Path, file_template, timeout: Optional[float] = None) -> None:
-    """Given a file template (a class similar to RunPython) find all instances of those files"""
-    for myfile in path.glob(file_template.glob):
-        print('Testing the file {}.'.format(myfile))
-        assert file_template.test(myfile, timeout)
-        print('File {} succeeded.'.format(myfile))
+class MyPy:
+    """Runs mypy on the pyton file to make sure it is correct in terms of typing"""
+
+    glob = '**/*.py'
+
+    @staticmethod
+    def test(path: Path, timeout: Optional[float] = None)-> bool:
+        from mypy import api
+        output, error, exitcode = api.run([str(path)])
+        print(output)
+        print(error, file=sys.stderr)
+        return exitcode == 0
+
+
+def find_and_test_all(root_dir: Path, file_templates: Sequence,
+                      timeout: Optional[float] = None) -> bool:
+    """Run standard sanity tests on all files.
+
+    Args:
+        root_dir: Find all files that satisfy the template in this directory.
+        file_tempaltes: A list of templates that we tell us how to find files an how to find
+            files and how to test them.
+        timeout: The maximum amount of time spent per file per test.
+
+    Returns:
+        Whether all the tests were successful.
+    """
+    success = True
+    print('Looking for files in {}.'.format(root_dir))
+    for method in file_templates:
+        print('Running test method {} in files {}.'.format(method.__class__.__name__, method.glob))
+        for myfile in root_dir.glob(method.glob):
+            print('Testing the file {}.'.format(myfile))
+            success = success and method.test(myfile, timeout)
+            print('File {} succeeded.'.format(myfile))
+    return success
