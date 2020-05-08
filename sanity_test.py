@@ -70,7 +70,7 @@ class MyPy:
     def test(path: Path, timeout: Optional[float] = None) -> bool:
         from mypy import api
         output, error, exitcode = api.run([str(path)])
-        print(output)
+        print(output, file=sys.stderr)
         print(error, file=sys.stderr)
         return exitcode == 0
 
@@ -94,6 +94,7 @@ def find_and_test_all(root_dir: Path, file_templates: Sequence,
         print('Running test method {} in files {}.'.format(method.__class__.__name__, method.glob))
         for myfile in root_dir.glob(method.glob):
             print('Testing the file {}.'.format(myfile))
-            success = success and method.test(myfile, timeout)
+            result = method.test(myfile, timeout)
+            success = success and result
             print('File {} succeeded.'.format(myfile))
     return success
