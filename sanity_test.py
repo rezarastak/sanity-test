@@ -36,8 +36,8 @@ class RunPython:
         One option is to always run the simulation where the SOURCE of the simulation is.
         the other option is to create a TEMP directory and use that to run the simulation.
         """
-        SOURCE = enum.auto()
-        TEMP = enum.auto()
+        SOURCE = 0
+        TEMP = 1
 
     def __init__(self, run_inside_dir: Directory) -> None:
         """
