@@ -30,7 +30,7 @@ class RunPython:
     glob = '**/run.py'
 
     @staticmethod
-    def _choose_interpreter(path: Path)-> str:
+    def _choose_interpreter(path: Path) -> str:
         """Given a python file, determines which python interpreter to use"""
         suggested_interpreter = find_shebang_executable(path)
         if suggested_interpreter is not None:
@@ -67,7 +67,7 @@ class MyPy:
     glob = '**/*.py'
 
     @staticmethod
-    def test(path: Path, timeout: Optional[float] = None)-> bool:
+    def test(path: Path, timeout: Optional[float] = None) -> bool:
         from mypy import api
         output, error, exitcode = api.run([str(path)])
         print(output)
