@@ -5,7 +5,9 @@ dealii, dealfem, and python_scripts evolve over time, all of our beloved simulat
 can be run and reproduced.
 """
 
+import collections
 import enum
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -72,8 +74,12 @@ class RunPython:
             assert self.dir_type == self.Directory.TEMP
             temp_dir = tempfile.TemporaryDirectory()
             working_dir = str(temp_dir)
+        # Tell all simulations to run in a single core manner to help debug error messages
+        additional_env = {'NPROC': '1'}
+        program_env = collections.ChainMap(os.environ, additional_env)
         try:
-            subprocess.run([interpreter, path.name], check=True, cwd=working_dir, timeout=timeout)
+            subprocess.run([interpreter, path.name], env=program_env, check=True,
+                           cwd=working_dir, timeout=timeout)
         except subprocess.TimeoutExpired:
             return True
         except subprocess.CalledProcessError:
