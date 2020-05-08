@@ -5,9 +5,11 @@ dealii, dealfem, and python_scripts evolve over time, all of our beloved simulat
 can be run and reproduced.
 """
 
+import enum
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 from typing import Optional, Sequence
 
 
@@ -29,6 +31,21 @@ class RunPython:
 
     glob = '**/run.py'
 
+    class Directory(enum.Enum):
+        """Encapsulated the current directory when running the simulations.
+        One option is to always run the simulation where the SOURCE of the simulation is.
+        the other option is to create a TEMP directory and use that to run the simulation.
+        """
+        SOURCE = enum.auto()
+        TEMP = enum.auto()
+
+    def __init__(self, run_inside_dir: Directory) -> None:
+        """
+        Args:
+            run_inside_dir: Run simulation inside this type of directory (SOURCE or TEMP)
+        """
+        self.dir_type = run_inside_dir
+
     @staticmethod
     def _choose_interpreter(path: Path) -> str:
         """Given a python file, determines which python interpreter to use"""
@@ -42,23 +59,30 @@ class RunPython:
             # TODO: remove this assumption about python3
             return 'python3'
 
-    @staticmethod
-    def test(path: Path, timeout: Optional[float] = None) -> bool:
+    def test(self, path: Path, timeout: Optional[float] = None) -> bool:
         """Tests a file. If successful, it returns true.
         A timeout can be provided to limit the execution time. However, we assume that
         whenever the process times out, it is working correctly (although it is a slow
         simulation). Thus reaching timeout causes the test to succeeds. This is a little
         counter-intuitive."""
         interpreter = RunPython._choose_interpreter(path)
+        if self.dir_type == self.Directory.SOURCE:
+            working_dir = str(path.parent)
+        else:
+            assert self.dir_type == self.Directory.TEMP
+            temp_dir = tempfile.TemporaryDirectory()
+            working_dir = str(temp_dir)
         try:
-            subprocess.run([interpreter, path.name], check=True, cwd=str(path.parent),
-                           timeout=timeout)
+            subprocess.run([interpreter, path.name], check=True, cwd=working_dir, timeout=timeout)
         except subprocess.TimeoutExpired:
             return True
         except subprocess.CalledProcessError:
             return False
         else:
             return True
+        finally:
+            if self.dir_type == self.Directory.TEMP:
+                temp_dir.cleanup()
 
 
 class MyPy:
