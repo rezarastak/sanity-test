@@ -126,5 +126,6 @@ def find_and_test_all(root_dir: Path, file_templates: Sequence,
             print('Testing the file {}.'.format(myfile))
             result = method.test(myfile, timeout)
             success = success and result
-            print('File {} succeeded.'.format(myfile))
+            print('File {} {}.'.format(myfile, 'succeeded' if result else 'failed'))
+            print('=' * 100)
     return success
