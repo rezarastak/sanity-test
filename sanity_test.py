@@ -140,4 +140,6 @@ def find_and_test_all(root_dir: Path, file_templates: Sequence,
             else:
                 logger.error('File %s failed.', myfile)
             logger.info('=' * 80)
+        logger.info('All files tested for %s', method.__class__.__name__)
+        logger.info('*' * 100)
     return success
