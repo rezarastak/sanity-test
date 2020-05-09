@@ -85,8 +85,7 @@ class RunPython:
         # Tell all simulations to run in a single core manner to help debug error messages
         additional_env = {'NPROC': '1'}
         program_env = collections.ChainMap(os.environ, additional_env)
-        proc = subprocess.Popen([interpreter, path.name], env=program_env, cwd=working_dir,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen([interpreter, path.name], env=program_env, cwd=working_dir)
         try:
             proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
@@ -97,9 +96,6 @@ class RunPython:
         else:
             return proc.returncode == 0
         finally:
-            myoutput, myerror = proc.communicate()
-            logger.info(str(myoutput))
-            logger.error(str(myerror))
             if self.dir_type == self.Directory.TEMP:
                 temp_dir.cleanup()
 
