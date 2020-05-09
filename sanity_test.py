@@ -7,12 +7,20 @@ can be run and reproduced.
 
 import collections
 import enum
+import logging
 import os
 from pathlib import Path
 import subprocess
-import sys
 import tempfile
 from typing import Optional, Sequence
+
+
+# setting the logs
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.INFO)
+logger.addHandler(stream_handler)
 
 
 def find_shebang_executable(path: Path) -> Optional[str]:
@@ -77,16 +85,21 @@ class RunPython:
         # Tell all simulations to run in a single core manner to help debug error messages
         additional_env = {'NPROC': '1'}
         program_env = collections.ChainMap(os.environ, additional_env)
+        proc = subprocess.Popen([interpreter, path.name], env=program_env, cwd=working_dir,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
-            subprocess.run([interpreter, path.name], env=program_env, check=True,
-                           cwd=working_dir, timeout=timeout)
+            proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
+            proc.kill()
+            logger.info('%s timed out after %f seconds. We assume it is working correctly' +
+                        ' but it is an expensive task.', path, timeout)
             return True
-        except subprocess.CalledProcessError:
-            return False
         else:
-            return True
+            return proc.returncode == 0
         finally:
+            myoutput, myerror = proc.communicate()
+            logger.info(str(myoutput))
+            logger.error(str(myerror))
             if self.dir_type == self.Directory.TEMP:
                 temp_dir.cleanup()
 
@@ -100,8 +113,8 @@ class MyPy:
     def test(path: Path, timeout: Optional[float] = None) -> bool:
         from mypy import api
         output, error, exitcode = api.run([str(path)])
-        print(output, file=sys.stderr)
-        print(error, file=sys.stderr)
+        logger.info(output)
+        logger.error(error)
         return exitcode == 0
 
 
@@ -119,13 +132,16 @@ def find_and_test_all(root_dir: Path, file_templates: Sequence,
         Whether all the tests were successful.
     """
     success = True
-    print('Looking for files in {}.'.format(root_dir))
+    logger.info('Looking for files in %s.', root_dir)
     for method in file_templates:
-        print('Running test method {} in files {}.'.format(method.__class__.__name__, method.glob))
+        logger.info('Running test method %s in files %s.', method.__class__.__name__, method.glob)
         for myfile in root_dir.glob(method.glob):
-            print('Testing the file {}.'.format(myfile))
+            logger.info('Testing the file %s.', myfile)
             result = method.test(myfile, timeout)
             success = success and result
-            print('File {} {}.'.format(myfile, 'succeeded' if result else 'failed'))
-            print('=' * 100)
+            if result:
+                logger.info('File %s succeeded.', myfile)
+            else:
+                logger.error('File %s failed.', myfile)
+            logger.info('=' * 80)
     return success
