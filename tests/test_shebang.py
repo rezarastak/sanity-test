@@ -4,7 +4,7 @@ import sanity_test
 
 
 def test_find_shebang_executable(tmp_path: Path) -> None:
-    myfile = tmp_path / 'sample.ext'
+    myfile = tmp_path / 'sample.txt'
     myfile.write_text("""#!/usr/bin/mybin
 
 Some code
