@@ -7,7 +7,7 @@ jobs:
     allow_failures:
         - python: "nightly"
 install:
-    - pip install flake8 mypy pytest pytest-cov
+    - pip install --upgrade flake8 mypy pytest pytest-cov
 script:
     - mypy .
     - python -m pytest --cov=.
