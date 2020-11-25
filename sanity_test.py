@@ -109,9 +109,14 @@ class MyPy:
     def test(path: Path, timeout: Optional[float] = None) -> bool:
         from mypy import api
         output, error, exitcode = api.run([str(path)])
-        logger.info(output)
-        logger.error(error)
-        return exitcode == 0
+        success = exitcode == 0
+        if not success:
+            logger.error('MyPy errors for %s', path)
+            if output:
+                logger.error(output.strip())
+            if error:
+                logger.error(error.strip())
+        return success
 
 
 def find_and_test_all(root_dir: Path, file_templates: Sequence,
