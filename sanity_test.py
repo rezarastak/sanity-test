@@ -15,12 +15,7 @@ import tempfile
 from typing import Optional, Sequence
 
 
-# setting the logs
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-logger.addHandler(stream_handler)
 
 
 def find_shebang_executable(path: Path) -> Optional[str]:
